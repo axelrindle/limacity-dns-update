@@ -27,7 +27,7 @@ func main() {
 func task(client *http.Client) {
 	records := LoadDNSEntries(client)
 
-	v4 := strings.Split(Env("DNS_IDS_IPV4", ""), ",")
+	v4 := strings.Split(Env("DNS_IDS_IPV4", ","), ",")
 	v6 := strings.Split(Env("DNS_IDS_IPV6", ""), ",")
 
 	for _, record := range records {
