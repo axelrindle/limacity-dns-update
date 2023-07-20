@@ -10,7 +10,7 @@ COPY . .
 RUN go build -v -o /usr/local/bin/app
 
 
-FROM scratch
+FROM golang:1.20-alpine
 
 COPY --from=build /usr/local/bin/app /
 
