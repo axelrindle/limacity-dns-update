@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -29,40 +30,54 @@ func MakeRequest(method string, base string, body io.Reader, args ...any) *http.
 	return req
 }
 
-func LoadIPAddress(client *http.Client, ipType string) string {
+func LoadIPAddress(client *http.Client, ipType string) (string, error) {
 	resp, err := client.Get(ipType)
-	DieIf(err)
+	if err != nil {
+		return "", err
+	}
 
 	defer resp.Body.Close()
 
 	address, err := io.ReadAll(resp.Body)
-	DieIf(err)
+	if err != nil {
+		return "", err
+	}
 
-	return strings.Replace(string(address), "\n", "", 1)
+	return strings.Replace(string(address), "\n", "", 1), nil
 }
 
-func LoadDNSEntries(client *http.Client) []NameserverRecord {
+func LoadDNSEntries(client *http.Client) ([]NameserverRecord, error) {
 	domainId := Env("DOMAIN_ID", "")
 	request := MakeRequest("GET", "domains/%s/records.json", nil, domainId)
 
 	resp, err := client.Do(request)
-	DieIf(err)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != 200 {
+		return nil, errors.New("Invalid response: " + resp.Status)
+	}
 
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
-	DieIf(err)
+	if err != nil {
+		return nil, err
+	}
 
 	var records ResponseListRecords
 	json.Unmarshal(body, &records)
 
 	log.Printf("Loaded a total of %d DNS entries.\n", len(records.Records))
 
-	return records.Records
+	return records.Records, nil
 }
 
-func UpdateDNSRecord(client *http.Client, record NameserverRecord, addressType string, addressUrl string) {
-	ipAddress := LoadIPAddress(client, addressUrl)
+func UpdateDNSRecord(client *http.Client, record NameserverRecord, addressType string, addressUrl string) error {
+	ipAddress, err := LoadIPAddress(client, addressUrl)
+	if err != nil {
+		return err
+	}
 
 	record.Content = ipAddress
 	log.Printf("Updating DNS entry '%s' with %s address '%s'\n",
@@ -73,7 +88,9 @@ func UpdateDNSRecord(client *http.Client, record NameserverRecord, addressType s
 	}
 
 	jsonString, err := json.Marshal(requestBody)
-	DieIf(err)
+	if err != nil {
+		return err
+	}
 
 	bodyReader := bytes.NewReader(jsonString)
 
@@ -82,23 +99,28 @@ func UpdateDNSRecord(client *http.Client, record NameserverRecord, addressType s
 	request.Header.Add("Content-Type", "application/json")
 
 	resp, err := client.Do(request)
-	DieIf(err)
+	if err != nil {
+		return err
+	}
 
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
-	DieIf(err)
+	if err != nil {
+		return err
+	}
 
 	// var status ResponseUpdateRecord
 	// json.Unmarshal(body, &status)
 
 	log.Println(string(body))
+	return nil
 }
 
-func UpdateDNSv4Record(client *http.Client, record NameserverRecord) {
-	UpdateDNSRecord(client, record, "IPV4", IPV4)
+func UpdateDNSv4Record(client *http.Client, record NameserverRecord) error {
+	return UpdateDNSRecord(client, record, "IPV4", IPV4)
 }
 
-func UpdateDNSv6Record(client *http.Client, record NameserverRecord) {
-	UpdateDNSRecord(client, record, "IPV6", IPV6)
+func UpdateDNSv6Record(client *http.Client, record NameserverRecord) error {
+	return UpdateDNSRecord(client, record, "IPV6", IPV6)
 }

@@ -5,12 +5,6 @@ import (
 	"os"
 )
 
-func DieIf(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
 func Env(key string, def string) string {
 	value := os.Getenv(key)
 

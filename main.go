@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -24,17 +25,38 @@ func main() {
 	<-gocron.Start()
 }
 
-func task(client *http.Client) {
-	records := LoadDNSEntries(client)
-
+func HandleRecord(client *http.Client, record NameserverRecord) error {
 	v4 := strings.Split(Env("DNS_IDS_IPV4", ","), ",")
-	v6 := strings.Split(Env("DNS_IDS_IPV6", ""), ",")
+	v6 := strings.Split(Env("DNS_IDS_IPV6", ","), ",")
 
+	if SliceContains(v4, strconv.Itoa(record.ID)) {
+		return UpdateDNSv4Record(client, record)
+	} else if SliceContains(v6, strconv.Itoa(record.ID)) {
+		return UpdateDNSv6Record(client, record)
+	}
+
+	return nil
+}
+
+const fileFailure = "/tmp/failure"
+
+func task(client *http.Client) {
+	records, err := LoadDNSEntries(client)
+	if err != nil {
+		log.Println(err)
+	}
+
+	isContainer := Env("CONTAINER", "false")
 	for _, record := range records {
-		if SliceContains(v4, strconv.Itoa(record.ID)) {
-			UpdateDNSv4Record(client, record)
-		} else if SliceContains(v6, strconv.Itoa(record.ID)) {
-			UpdateDNSv6Record(client, record)
+		err := HandleRecord(client, record)
+		if isContainer == "true" {
+			continue
+		}
+
+		if err != nil {
+			os.WriteFile(fileFailure, nil, 0644)
+		} else {
+			os.Remove(fileFailure)
 		}
 	}
 
