@@ -1,5 +1,7 @@
 package main
 
+import "context"
+
 type Error struct {
 	s string
 }
@@ -25,3 +27,6 @@ type ResponseUpdateRecord struct {
 type ResponseListRecords struct {
 	Records []NameserverRecord `json:"records"`
 }
+
+// operation is a clean up function on shutting down
+type ShutdownHook func(ctx context.Context) error
