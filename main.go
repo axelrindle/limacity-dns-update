@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"context"
 	"net/http"
 	"os"
 	"strconv"
@@ -10,25 +10,49 @@ import (
 
 	"github.com/go-co-op/gocron"
 	"github.com/joho/godotenv"
+	log "github.com/sirupsen/logrus"
 )
+
+var invocation = 0
 
 func main() {
 	godotenv.Load()
 
+	if Env("LOGGING_JSON", "false") == "true" {
+		log.SetFormatter(&log.JSONFormatter{})
+	}
+	if Env("LOGGING_DEBUG", "false") == "true" {
+		log.SetLevel(log.DebugLevel)
+	}
+
 	client := &http.Client{Timeout: 10 * time.Second}
 	scheduler := gocron.NewScheduler(time.Local)
 	scheduler.Every(1).Hour().Do(func() {
+		invocation++
+		log.WithFields(log.Fields{
+			"invocation": invocation,
+		}).Info("Starting task...")
+
 		task(client)
 
 		_, nextRun := scheduler.NextRun()
-		log.Printf("Next run at %s", nextRun.Local().Format(time.RFC3339))
+		log.WithFields(log.Fields{
+			"timestamp": nextRun.Local().Format(time.RFC3339),
+		}).Info("Done. Next run scheduled.")
 		println()
 	})
 
-	log.Println("Task will run once every hour.")
+	log.Info("Task will run once every hour.")
 	println()
 
-	scheduler.StartBlocking()
+	scheduler.StartAsync()
+
+	<-GracefulShutdown(context.Background(), 2*time.Second, map[string]ShutdownHook{
+		"scheduler": func(ctx context.Context) error {
+			scheduler.Stop()
+			return nil
+		},
+	})
 }
 
 func HandleRecord(client *http.Client, record NameserverRecord) error {
@@ -49,7 +73,9 @@ const fileFailure = "/tmp/failure"
 func task(client *http.Client) {
 	records, err := LoadDNSEntries(client)
 	if err != nil {
-		log.Println(err)
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Error("Failed to load DNS entries!")
 	} else {
 		isContainer := Env("CONTAINER", "false")
 		for _, record := range records {

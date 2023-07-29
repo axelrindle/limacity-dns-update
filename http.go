@@ -7,9 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -55,7 +56,7 @@ func LoadDNSEntries(client *http.Client) ([]NameserverRecord, error) {
 		return nil, err
 	}
 	if resp.StatusCode != 200 {
-		return nil, errors.New("Invalid response: " + resp.Status)
+		return nil, errors.New(resp.Status)
 	}
 
 	defer resp.Body.Close()
@@ -68,7 +69,9 @@ func LoadDNSEntries(client *http.Client) ([]NameserverRecord, error) {
 	var records ResponseListRecords
 	json.Unmarshal(body, &records)
 
-	log.Printf("Loaded a total of %d DNS entries.\n", len(records.Records))
+	log.WithFields(log.Fields{
+		"count": len(records.Records),
+	}).Info("Received DNS entries.")
 
 	return records.Records, nil
 }
@@ -80,12 +83,15 @@ func UpdateDNSRecord(client *http.Client, record NameserverRecord, addressType s
 	}
 
 	record.Content = ipAddress
-	log.Printf("Updating DNS entry '%s' with %s address '%s'\n",
-		record.Name, addressType, record.Content)
-
 	requestBody := RequestUpdateRecord{
 		Record: record,
 	}
+
+	logger := log.WithFields(log.Fields{
+		"type":   addressType,
+		"domain": record.Name,
+		"record": record.Type,
+	})
 
 	jsonString, err := json.Marshal(requestBody)
 	if err != nil {
@@ -110,10 +116,17 @@ func UpdateDNSRecord(client *http.Client, record NameserverRecord, addressType s
 		return err
 	}
 
-	// var status ResponseUpdateRecord
-	// json.Unmarshal(body, &status)
+	var status ResponseUpdateRecord
+	json.Unmarshal(body, &status)
 
-	log.Println(string(body))
+	if resp.StatusCode == 200 {
+		logger.Info("Update succeeded.")
+	} else {
+		log.WithFields(log.Fields{
+			"error": status.Error,
+		}).Error("Update failed!")
+	}
+
 	return nil
 }
 
