@@ -44,19 +44,19 @@ func task(client *http.Client) {
 	records, err := LoadDNSEntries(client)
 	if err != nil {
 		log.Println(err)
-	}
+	} else {
+		isContainer := Env("CONTAINER", "false")
+		for _, record := range records {
+			err := HandleRecord(client, record)
+			if isContainer == "false" {
+				continue
+			}
 
-	isContainer := Env("CONTAINER", "false")
-	for _, record := range records {
-		err := HandleRecord(client, record)
-		if isContainer == "true" {
-			continue
-		}
-
-		if err != nil {
-			os.WriteFile(fileFailure, nil, 0644)
-		} else {
-			os.Remove(fileFailure)
+			if err != nil {
+				os.WriteFile(fileFailure, nil, 0644)
+			} else {
+				os.Remove(fileFailure)
+			}
 		}
 	}
 
