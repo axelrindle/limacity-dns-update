@@ -1,0 +1,7 @@
+services:
+  updater:
+    image: ghcr.io/axelrindle/limacity-dns-update:latest
+    container_name: limacity-dns-update
+    env_file:
+      - .env
+    network_mode: host

@@ -8,3 +8,7 @@ build: clean
 
 run: build
 	./dist/limacity-dns-update
+
+docker: build
+	docker build . -t ghcr.io/axelrindle/limacity-dns-update:latest
+	docker compose up
