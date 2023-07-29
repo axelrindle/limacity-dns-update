@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jasonlvhit/gocron"
+	"github.com/go-co-op/gocron"
 	"github.com/joho/godotenv"
 )
 
@@ -16,13 +16,19 @@ func main() {
 	godotenv.Load()
 
 	client := &http.Client{Timeout: 10 * time.Second}
-	gocron.Every(1).Hour().Do(task, client)
+	scheduler := gocron.NewScheduler(time.Local)
+	scheduler.Every(1).Hour().Do(func() {
+		task(client)
+
+		_, nextRun := scheduler.NextRun()
+		log.Printf("Next run at %s", nextRun.Local().Format(time.RFC3339))
+		println()
+	})
 
 	log.Println("Task will run once every hour.")
 	println()
 
-	gocron.RunAll()
-	<-gocron.Start()
+	scheduler.StartBlocking()
 }
 
 func HandleRecord(client *http.Client, record NameserverRecord) error {
@@ -59,8 +65,4 @@ func task(client *http.Client) {
 			}
 		}
 	}
-
-	_, nextRun := gocron.NextRun()
-	log.Printf("Next run at %s", nextRun.Local().Format(time.RFC3339))
-	println()
 }
