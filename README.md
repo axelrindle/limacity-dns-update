@@ -6,6 +6,20 @@
 
 ## Usage
 
+### Docker
+
+The Docker container is the preferred way to use this:
+
+```
+docker run -d \
+    --name limacity-dns-update \
+    --env-file .env \
+    --network host \
+    ghcr.io/axelrindle/limacity-dns-update:latest
+```
+
+The `--network host` flag is required for IPv6 support.
+
 ## Development
 
 ## License
