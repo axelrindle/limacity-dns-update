@@ -12,6 +12,10 @@ RUN go build -v -o /usr/local/bin/app
 
 FROM golang:1.20-alpine
 
+ENV CONTAINER=true
+
 COPY --from=build /usr/local/bin/app /
+
+HEALTHCHECK CMD sh -c "[ ! -f /tmp/failure ]"
 
 CMD ["/app"]
