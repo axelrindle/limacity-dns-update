@@ -1,3 +1,5 @@
+name: limacity-dns-update
+
 services:
   updater:
     image: ghcr.io/axelrindle/limacity-dns-update:latest
