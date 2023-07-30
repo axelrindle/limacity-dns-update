@@ -67,7 +67,10 @@ func LoadDNSEntries(client *http.Client) ([]NameserverRecord, error) {
 	}
 
 	var records ResponseListRecords
-	json.Unmarshal(body, &records)
+	errJson := json.Unmarshal(body, &records)
+	if errJson != nil {
+		return nil, errJson
+	}
 
 	log.WithFields(log.Fields{
 		"count": len(records.Records),
