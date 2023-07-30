@@ -15,7 +15,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const VERSION = "v0.0.0"
+const VERSION = "v0.1.0"
 
 var invocation = 0
 
