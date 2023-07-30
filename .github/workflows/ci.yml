@@ -40,8 +40,6 @@ jobs:
         go-version: '1.20'
     - name: Test
       run: make test
-      env:
-        API_URL: "http://localhost:${{ job.services.mock.ports[5432] }}"
     - name: Codacy Coverage Reporter
       uses: codacy/codacy-coverage-reporter-action@v1.3.0
       with:
