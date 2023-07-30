@@ -22,7 +22,20 @@ docker run -d \
 
 The `--network host` flag is required for IPv6 support.
 
-## Development
+### Binary
+
+If you'd like to use the binary, download it from the [latest release](https://github.com/axelrindle/limacity-dns-update/releases/latest).
+
+Make sure to place a `.env` file next to the binary.
+
+### Systemd
+
+I provide a systemd unit file.
+
+1. Place it at `~/.config/systemd/user`.
+2. Copy the [binary](#binary) to `/usr/local/bin/limacity-dns-update`.
+3. Create an `env` file at `/usr/local/etc/limacity-dns-update.env` and populate it
+with settings from the `.env.example` file.
 
 ## License
 

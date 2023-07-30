@@ -1,0 +1,14 @@
+[Unit]
+Description=🤖 Updates DNS entries on Lima-City.
+Documentation=https://github.com/axelrindle/limacity-dns-update#readme
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/limacity-dns-update
+Restart=always
+EnvironmentFile=/usr/local/etc/limacity-dns-update.env
+
+[Install]
+WantedBy=multi-user.target
