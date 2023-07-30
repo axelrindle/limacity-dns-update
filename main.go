@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"net/http"
 	"os"
 	"strconv"
@@ -14,9 +15,25 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const VERSION = "v0.0.0"
+
 var invocation = 0
 
+var showVersion bool
+
+func handleFlags() {
+	flag.BoolVar(&showVersion, "version", false, "show the binary version and exit")
+	flag.Parse()
+
+	if showVersion {
+		println(VERSION)
+		os.Exit(0)
+	}
+}
+
 func main() {
+	handleFlags()
+
 	godotenv.Load()
 
 	if shared.Env("LOGGING_JSON", "false") == "true" {
