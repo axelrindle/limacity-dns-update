@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run Current File",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${fileDirname}"
+        },
+        {
+            "name": "Test Current File",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${fileDirname}"
+        }
+    ]
+}

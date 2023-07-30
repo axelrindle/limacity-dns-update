@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/axelrindle/limacity-dns-update/shared"
 	"github.com/go-co-op/gocron"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
@@ -18,10 +19,10 @@ var invocation = 0
 func main() {
 	godotenv.Load()
 
-	if Env("LOGGING_JSON", "false") == "true" {
+	if shared.Env("LOGGING_JSON", "false") == "true" {
 		log.SetFormatter(&log.JSONFormatter{})
 	}
-	if Env("LOGGING_DEBUG", "false") == "true" {
+	if shared.Env("LOGGING_DEBUG", "false") == "true" {
 		log.SetLevel(log.DebugLevel)
 	}
 
@@ -47,7 +48,7 @@ func main() {
 
 	scheduler.StartAsync()
 
-	<-GracefulShutdown(context.Background(), 2*time.Second, map[string]ShutdownHook{
+	<-shared.GracefulShutdown(context.Background(), 2*time.Second, map[string]shared.ShutdownHook{
 		"scheduler": func(ctx context.Context) error {
 			scheduler.Stop()
 			return nil
@@ -55,13 +56,13 @@ func main() {
 	})
 }
 
-func HandleRecord(client *http.Client, record NameserverRecord) error {
-	v4 := strings.Split(Env("DNS_IDS_IPV4", ","), ",")
-	v6 := strings.Split(Env("DNS_IDS_IPV6", ","), ",")
+func HandleRecord(client *http.Client, record shared.NameserverRecord) error {
+	v4 := strings.Split(shared.Env("DNS_IDS_IPV4", ","), ",")
+	v6 := strings.Split(shared.Env("DNS_IDS_IPV6", ","), ",")
 
-	if SliceContains(v4, strconv.Itoa(record.ID)) {
+	if shared.SliceContains(v4, strconv.Itoa(record.ID)) {
 		return UpdateDNSv4Record(client, record)
-	} else if SliceContains(v6, strconv.Itoa(record.ID)) {
+	} else if shared.SliceContains(v6, strconv.Itoa(record.ID)) {
 		return UpdateDNSv6Record(client, record)
 	}
 
@@ -77,7 +78,7 @@ func task(client *http.Client) {
 			"error": err,
 		}).Error("Failed to load DNS entries!")
 	} else {
-		isContainer := Env("CONTAINER", "false")
+		isContainer := shared.Env("CONTAINER", "false")
 		for _, record := range records {
 			err := HandleRecord(client, record)
 			if isContainer == "false" {

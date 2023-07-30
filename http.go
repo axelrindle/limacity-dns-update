@@ -10,20 +10,16 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/axelrindle/limacity-dns-update/shared"
 	log "github.com/sirupsen/logrus"
 )
 
-const (
-	IPV4 = "https://ifconfig.me"
-	IPV6 = "https://ifconfig.co"
-)
-
 func MakeRequest(method string, base string, body io.Reader, args ...any) *http.Request {
-	apiUrl := Env("API_URL", "https://www.lima-city.de/usercp")
+	apiUrl := shared.Env("API_URL", "https://www.lima-city.de/usercp")
 
 	url := fmt.Sprintf(apiUrl+"/"+base, args...)
 	req, _ := http.NewRequest(method, url, body)
-	authString := Env("API_USER", "") + ":" + Env("API_PASSWORD", "")
+	authString := shared.Env("API_USER", "") + ":" + shared.Env("API_PASSWORD", "")
 
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(authString)))
@@ -47,8 +43,8 @@ func LoadIPAddress(client *http.Client, ipType string) (string, error) {
 	return strings.Replace(string(address), "\n", "", 1), nil
 }
 
-func LoadDNSEntries(client *http.Client) ([]NameserverRecord, error) {
-	domainId := Env("DOMAIN_ID", "")
+func LoadDNSEntries(client *http.Client) ([]shared.NameserverRecord, error) {
+	domainId := shared.Env("DOMAIN_ID", "")
 	request := MakeRequest("GET", "domains/%s/records.json", nil, domainId)
 
 	resp, err := client.Do(request)
@@ -66,7 +62,7 @@ func LoadDNSEntries(client *http.Client) ([]NameserverRecord, error) {
 		return nil, err
 	}
 
-	var records ResponseListRecords
+	var records shared.ResponseListRecords
 	errJson := json.Unmarshal(body, &records)
 	if errJson != nil {
 		return nil, errJson
@@ -79,14 +75,21 @@ func LoadDNSEntries(client *http.Client) ([]NameserverRecord, error) {
 	return records.Records, nil
 }
 
-func UpdateDNSRecord(client *http.Client, record NameserverRecord, addressType string, addressUrl string) error {
+var addressUrlDefaults = map[string]string{
+	"API_URL_IPv4": "https://ifconfig.me/ip",
+	"API_URL_IPv6": "https://ifconfig.co/ip",
+}
+
+func UpdateDNSRecord(client *http.Client, record shared.NameserverRecord, addressType string) error {
+	addressUrlKey := "API_URL_" + addressType
+	addressUrl := shared.Env(addressUrlKey, addressUrlDefaults[addressUrlKey])
 	ipAddress, err := LoadIPAddress(client, addressUrl)
 	if err != nil {
 		return err
 	}
 
 	record.Content = ipAddress
-	requestBody := RequestUpdateRecord{
+	requestBody := shared.RequestUpdateRecord{
 		Record: record,
 	}
 
@@ -94,6 +97,7 @@ func UpdateDNSRecord(client *http.Client, record NameserverRecord, addressType s
 		"type":   addressType,
 		"domain": record.Name,
 		"record": record.Type,
+		"ip":     ipAddress,
 	})
 
 	jsonString, err := json.Marshal(requestBody)
@@ -103,7 +107,7 @@ func UpdateDNSRecord(client *http.Client, record NameserverRecord, addressType s
 
 	bodyReader := bytes.NewReader(jsonString)
 
-	domainId := Env("DOMAIN_ID", "")
+	domainId := shared.Env("DOMAIN_ID", "")
 	request := MakeRequest("PUT", "domains/%s/records/%d", bodyReader, domainId, record.ID)
 	request.Header.Add("Content-Type", "application/json")
 
@@ -119,7 +123,7 @@ func UpdateDNSRecord(client *http.Client, record NameserverRecord, addressType s
 		return err
 	}
 
-	var status ResponseUpdateRecord
+	var status shared.ResponseUpdateRecord
 	json.Unmarshal(body, &status)
 
 	if resp.StatusCode == 200 {
@@ -133,10 +137,10 @@ func UpdateDNSRecord(client *http.Client, record NameserverRecord, addressType s
 	return nil
 }
 
-func UpdateDNSv4Record(client *http.Client, record NameserverRecord) error {
-	return UpdateDNSRecord(client, record, "IPV4", IPV4)
+func UpdateDNSv4Record(client *http.Client, record shared.NameserverRecord) error {
+	return UpdateDNSRecord(client, record, "IPv4")
 }
 
-func UpdateDNSv6Record(client *http.Client, record NameserverRecord) error {
-	return UpdateDNSRecord(client, record, "IPV6", IPV6)
+func UpdateDNSv6Record(client *http.Client, record shared.NameserverRecord) error {
+	return UpdateDNSRecord(client, record, "IPv6")
 }
