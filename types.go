@@ -7,12 +7,11 @@ type Error struct {
 }
 
 type NameserverRecord struct {
-	ID       int    `json:"id"`
-	Name     string `json:"name"`
-	Type     string `json:"type"`
-	Content  string `json:"content"`
-	TTL      int    `json:"ttl"`
-	Priority string `json:"priority"`
+	ID      int    `json:"id"`
+	Name    string `json:"name"`
+	Type    string `json:"type"`
+	Content string `json:"content"`
+	TTL     int    `json:"ttl"`
 }
 
 type RequestUpdateRecord struct {
