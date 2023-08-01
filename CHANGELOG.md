@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- The mock server can be started using the `--mock` flag.
+
 ### Changed
 
 - Records already having the current IP address are not updated.
