@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- Records already having the current IP address are not updated.
+
 ## v0.1.0 - 2023-07-30
 
 Initial release :tada:
