@@ -15,7 +15,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	godotenv.Load(".env.testing")
+	godotenv.Load("../.env.testing")
 	logrus.SetOutput(io.Discard)
 
 	server := mock.StartMock()
