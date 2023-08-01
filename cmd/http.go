@@ -94,9 +94,17 @@ func updateDNSRecord(client *http.Client, record shared.NameserverRecord, addres
 		"record": record.Type,
 	})
 
-	if record.Content == ipAddress {
-		logger.Info("Record already up-to-date.")
-		return nil
+	records, err := loadDNSEntries(client)
+	if err != nil {
+		return err
+	}
+	for _, nr := range records {
+		if nr.ID == record.ID {
+			if nr.Content == ipAddress {
+				logger.Info("Record already up-to-date.")
+				return nil
+			}
+		}
 	}
 
 	record.Content = ipAddress
