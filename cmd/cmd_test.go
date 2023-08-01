@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"context"
@@ -30,14 +30,14 @@ func TestMain(m *testing.M) {
 var httpClient = &http.Client{Timeout: 10 * time.Second}
 
 func TestLoadDNSEntries(t *testing.T) {
-	records, err := LoadDNSEntries(httpClient)
+	records, err := loadDNSEntries(httpClient)
 
 	assert.Nil(t, err)
 	assert.Len(t, records, 2, "Expected to receive 2 DNS records!")
 }
 
 func TestUpdate(t *testing.T) {
-	records, err1 := LoadDNSEntries(httpClient)
+	records, err1 := loadDNSEntries(httpClient)
 
 	assert.Nil(t, err1)
 	assert.Len(t, records, 2, "Expected to receive 2 DNS records!")
@@ -49,11 +49,11 @@ func TestUpdate(t *testing.T) {
 
 	theRecord.Content = "13.12.11.10"
 
-	err2 := HandleRecord(httpClient, theRecord)
+	err2 := handleRecord(httpClient, theRecord)
 
 	assert.Nil(t, err2)
 
-	records, err3 := LoadDNSEntries(httpClient)
+	records, err3 := loadDNSEntries(httpClient)
 
 	assert.Nil(t, err3)
 	assert.Len(t, records, 2, "Expected to receive 2 DNS records!")
