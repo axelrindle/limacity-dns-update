@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/axelrindle/limacity-dns-update/mock"
 	"github.com/axelrindle/limacity-dns-update/shared"
 	"github.com/go-co-op/gocron"
 	"github.com/joho/godotenv"
@@ -20,13 +21,27 @@ const VERSION = "v0.1.0"
 var invocation = 0
 
 var showVersion bool
+var startMock bool
 
 func handleFlags() {
 	flag.BoolVar(&showVersion, "version", false, "show the binary version and exit")
+	flag.BoolVar(&startMock, "mock", false, "Start the mock server")
 	flag.Parse()
 
 	if showVersion {
 		println(VERSION)
+		os.Exit(0)
+	}
+
+	if startMock {
+		server := mock.StartMock()
+
+		<-shared.GracefulShutdown(context.Background(), 5*time.Second, map[string]shared.ShutdownHook{
+			"server": func(ctx context.Context) error {
+				server.Shutdown(ctx)
+				return nil
+			},
+		})
 		os.Exit(0)
 	}
 }
