@@ -2,10 +2,6 @@ package shared
 
 import "context"
 
-type Error struct {
-	s string
-}
-
 type NameserverRecord struct {
 	ID      int    `json:"id"`
 	Name    string `json:"name"`
