@@ -92,20 +92,8 @@ func updateDNSRecord(client *http.Client, record shared.NameserverRecord, addres
 		"type":   addressType,
 		"domain": record.Name,
 		"record": record.Type,
+		"ip":     ipAddress,
 	})
-
-	records, err := loadDNSEntries(client)
-	if err != nil {
-		return err
-	}
-	for _, nr := range records {
-		if nr.ID == record.ID {
-			if nr.Content == ipAddress {
-				logger.Info("Record already up-to-date.")
-				return nil
-			}
-		}
-	}
 
 	record.Content = ipAddress
 	requestBody := shared.RequestUpdateRecord{
@@ -139,12 +127,16 @@ func updateDNSRecord(client *http.Client, record shared.NameserverRecord, addres
 	json.Unmarshal(body, &status)
 
 	if resp.StatusCode == 200 {
-		logger.WithFields(log.Fields{
-			"ip": ipAddress,
-		}).Info("Update succeeded.")
+		logger.Info("Update succeeded.")
 	} else {
-		log.WithFields(log.Fields{
-			"error": status.Error,
+		error := status.Error
+		if resp.StatusCode == 400 {
+			error = strings.Join(status.Errors.Content, "; ")
+		}
+
+		logger.WithFields(log.Fields{
+			"error":  error,
+			"status": status.Status,
 		}).Error("Update failed!")
 	}
 

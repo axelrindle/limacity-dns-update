@@ -2,6 +2,10 @@ package shared
 
 import "context"
 
+type ErrorsRecord struct {
+	Content []string `json:"content"`
+}
+
 type NameserverRecord struct {
 	ID      int    `json:"id"`
 	Name    string `json:"name"`
@@ -15,8 +19,9 @@ type RequestUpdateRecord struct {
 }
 
 type ResponseUpdateRecord struct {
-	Status string `json:"status"`
-	Error  string `json:"error"`
+	Status string       `json:"status"`
+	Error  string       `json:"error"`
+	Errors ErrorsRecord `json:"errors"`
 }
 
 type ResponseListRecords struct {
