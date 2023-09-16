@@ -18,7 +18,7 @@ jobs:
         with:
           go-version: '1.20'
       - name: Build
-        run: go build -v -o "dist/${{ github.event.repository.name }}-${{ github.ref_name }}" ./...
+        run: go build -v -o "dist/${{ github.event.repository.name }}-${{ github.ref_name }}" .
 
       - id: extract-changelog
         uses: sean0x42/markdown-extract@v2
