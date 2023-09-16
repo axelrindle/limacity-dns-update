@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Records already having the current IP address are not updated.
 - Improved error handling.
+- Using [ipify](https://www.ipify.org/) as the default IP service.
 
 ## v0.1.0 - 2023-07-30
 

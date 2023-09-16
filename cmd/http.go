@@ -76,8 +76,8 @@ func loadDNSEntries(client *http.Client) ([]shared.NameserverRecord, error) {
 }
 
 var addressUrlDefaults = map[string]string{
-	"API_URL_IPv4": "https://ifconfig.me/ip",
-	"API_URL_IPv6": "https://ifconfig.co/ip",
+	"API_URL_IPv4": "https://api.ipify.org",
+	"API_URL_IPv6": "https://api64.ipify.org",
 }
 
 func updateDNSRecord(client *http.Client, record shared.NameserverRecord, addressType string) error {
