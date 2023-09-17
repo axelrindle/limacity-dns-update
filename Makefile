@@ -3,8 +3,9 @@ default: build
 clean:
 	@rm -rf dist
 
+OUTPUT ?= dist/
 build: clean
-	go build -o dist/ .
+	go build -ldflags="-s -w" -o $(OUTPUT) .
 
 test:
 	go test -v -cover -coverprofile=coverage.out ./...

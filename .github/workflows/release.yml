@@ -5,6 +5,9 @@ on:
     tags:
       - "v*.*.*"
 
+env:
+  GO_VERSION: 1.20
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -16,9 +19,11 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.20'
+          go-version: ${{ env.GO_VERSION }}
       - name: Build
-        run: go build -v -o "dist/${{ github.event.repository.name }}-${{ github.ref_name }}" .
+        run: make build
+        env:
+          OUTPUT: dist/${{ github.event.repository.name }}-${{ github.ref_name }}
 
       - id: extract-changelog
         uses: sean0x42/markdown-extract@v2
