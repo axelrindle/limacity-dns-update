@@ -7,15 +7,17 @@ COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 
 COPY . .
-RUN go build -v -o /usr/local/bin/app
+RUN go build -v -ldflags="-w -s" -o /usr/local/bin/app
 
 
-FROM golang:1.20-alpine
+FROM alpine:3
 
 ENV CONTAINER=true
 
 COPY --from=build /usr/local/bin/app /
 
 HEALTHCHECK CMD sh -c "[ ! -f /tmp/failure ]"
+
+USER 1001
 
 CMD ["/app"]
