@@ -46,6 +46,10 @@ func handleFlags() {
 	}
 }
 
+func GetVersion() string {
+	return VERSION
+}
+
 func Run() {
 	handleFlags()
 
