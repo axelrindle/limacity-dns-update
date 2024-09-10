@@ -13,6 +13,7 @@ func main() {
 	println(banner)
 	println("  " + cmd.GetVersion())
 	println()
+	println()
 
 	cmd.Run()
 }
