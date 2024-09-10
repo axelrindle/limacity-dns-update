@@ -13,18 +13,21 @@ import (
 	"github.com/axelrindle/limacity-dns-update/shared"
 	"github.com/go-co-op/gocron"
 	"github.com/joho/godotenv"
+	"github.com/lnquy/cron"
 	log "github.com/sirupsen/logrus"
 )
 
-const VERSION = "v0.2.0"
+const VERSION = "v0.3.0"
 
 var invocation = 0
 
 var showVersion bool
+var oneshot bool
 var startMock bool
 
 func handleFlags() {
 	flag.BoolVar(&showVersion, "version", false, "show the binary version and exit")
+	flag.BoolVar(&oneshot, "oneshot", false, "run the updater once and exit")
 	flag.BoolVar(&startMock, "mock", false, "Start the mock server")
 	flag.Parse()
 
@@ -63,8 +66,16 @@ func Run() {
 	}
 
 	client := &http.Client{Timeout: 10 * time.Second}
+
+	if oneshot {
+		task(client)
+		return
+	}
+
 	scheduler := gocron.NewScheduler(time.Local)
-	scheduler.Every(1).Hour().Do(func() {
+	expression := shared.Env("CRON", "0 1 * * *")
+	digits := len(strings.Split(expression, " "))
+	handler := func() {
 		invocation++
 		log.WithFields(log.Fields{
 			"invocation": invocation,
@@ -77,9 +88,38 @@ func Run() {
 			"timestamp": nextRun.Local().Format(time.RFC3339),
 		}).Info("Done. Next run scheduled.")
 		println()
-	})
+	}
 
-	log.Info("Task will run once every hour.")
+	switch digits {
+	case 5:
+		scheduler.Cron(expression).Do(handler)
+	case 6:
+		scheduler.CronWithSeconds(expression).Do(handler)
+	default:
+		panic("Invalid cron expression!")
+	}
+
+	locale := cron.Locale_en
+	descriptor, err := cron.NewDescriptor(
+		cron.Use24HourTimeFormat(true),
+		cron.DayOfWeekStartsAtOne(true),
+		cron.SetLocales(locale),
+	)
+	if err != nil {
+		panic(err)
+	}
+	description, err := descriptor.ToDescription(expression, locale)
+	if err != nil {
+		panic(err)
+	}
+
+	runInitial := shared.Env("INITIAL", "true") == "true"
+	if runInitial {
+		log.Info("Initial execution")
+		handler()
+	}
+
+	log.Info("Task schedule: " + description)
 	println()
 
 	scheduler.StartAsync()
