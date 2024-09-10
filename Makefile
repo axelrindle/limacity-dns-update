@@ -5,7 +5,10 @@ clean:
 
 OUTPUT ?= dist/
 build: clean
-	go build -ldflags="-s -w" -o $(OUTPUT) .
+	for arch in amd64 arm64 ; do \
+		echo "Building for linux/$$arch" … ; \
+		GOOS=linux GOARCH="$$arch" go build -ldflags="-s -w" -o "$(OUTPUT)/$$arch/" . ; \
+	done
 
 test:
 	go test -v -cover -coverprofile=coverage.out ./...
