@@ -1,11 +1,12 @@
 module github.com/axelrindle/limacity-dns-update
 
-go 1.20
+go 1.23
 
 require (
 	github.com/go-co-op/gocron v1.30.1
 	github.com/gorilla/mux v1.8.0
 	github.com/joho/godotenv v1.5.1
+	github.com/lnquy/cron v1.1.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4
 )
